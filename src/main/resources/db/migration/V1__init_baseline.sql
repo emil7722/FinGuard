@@ -1,0 +1,2 @@
+-- V1: Initial baseline migration for FinGuard
+-- No tables yet, just establishing the version control baseline.
