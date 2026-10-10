@@ -5,8 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -24,9 +24,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
         try {
             String token = extractTokenFromRequest(request);
 
@@ -35,15 +35,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = jwtTokenProvider.getUsernameFromToken(token);
                 String role = jwtTokenProvider.getRoleFromToken(token);
 
+                UserPrincipal principal = new UserPrincipal(userId, username, role);
                 SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        username, null, Collections.singleton(authority)
+                        principal,
+                        null,
+                        Collections.singleton(authority)
                 );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            // Invalid token, continue without authentication
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

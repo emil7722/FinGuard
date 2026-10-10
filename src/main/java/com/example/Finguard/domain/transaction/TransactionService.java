@@ -5,10 +5,16 @@ import com.example.Finguard.common.exception.NotFoundException;
 import com.example.Finguard.common.exception.ValidationException;
 import com.example.Finguard.domain.account.Account;
 import com.example.Finguard.domain.account.AccountRepository;
+import com.example.Finguard.domain.auth.UserPrincipal;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.UUID;
 
 @Service
 public class TransactionService {
@@ -81,12 +87,56 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public List<Transaction> getTransactionsByAccount(java.util.UUID accountId) {
-        return transactionRepository.findAll().stream()
-                .filter(transaction ->
-                        (transaction.getSourceAccount() != null && transaction.getSourceAccount().getId().equals(accountId)) ||
-                        (transaction.getDestinationAccount() != null && transaction.getDestinationAccount().getId().equals(accountId)))
-                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                .toList();
+    public Page<Transaction> getTransactionsByAccount(UUID accountId, String status, int page, int size) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new NotFoundException("Account", accountId.toString()));
+
+        if (!isAdmin()) {
+            UserPrincipal principal = getCurrentPrincipal();
+            if (principal == null || !principal.getUserId().equals(account.getUser().getId())) {
+                throw new ValidationException("You are not allowed to access these transactions");
+            }
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        if (status == null || status.isBlank()) {
+            return transactionRepository.findBySourceAccount_IdOrDestinationAccount_Id(
+                    accountId,
+                    accountId,
+                    pageable
+            );
+        }
+
+        return transactionRepository.findBySourceAccount_IdOrDestinationAccount_IdAndStatus(
+                accountId,
+                accountId,
+                status.toUpperCase(),
+                pageable
+        );
+    }
+
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    private UserPrincipal getCurrentPrincipal() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserPrincipal userPrincipal) {
+            return userPrincipal;
+        }
+
+        return null;
     }
 }

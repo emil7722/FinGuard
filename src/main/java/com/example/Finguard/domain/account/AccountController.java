@@ -53,7 +53,7 @@ public class AccountController {
     @GetMapping("/{id}")
     @Secured({"ROLE_USER", "ROLE_ADMIN"})
     public ResponseEntity<AccountResponseDto> getAccountById(@PathVariable UUID id) {
-        Account account = accountService.getAccountById(id);
+        Account account = accountService.getAccountByIdForCurrentUser(id);
         AccountResponseDto response = new AccountResponseDto(
                 account.getId(),
                 account.getUser().getId(),
@@ -68,7 +68,7 @@ public class AccountController {
     @GetMapping("/user/{userId}")
     @Secured({"ROLE_USER", "ROLE_ADMIN"})
     public ResponseEntity<List<AccountResponseDto>> getAccountsByUser(@PathVariable UUID userId) {
-        return ResponseEntity.ok(accountService.getAccountsByUserId(userId).stream()
+        return ResponseEntity.ok(accountService.getAccountsByUserIdForCurrentUser(userId).stream()
                 .map(account -> new AccountResponseDto(
                         account.getId(),
                         account.getUser().getId(),
@@ -82,15 +82,6 @@ public class AccountController {
     @GetMapping("/{id}/summary")
     @Secured({"ROLE_USER", "ROLE_ADMIN"})
     public ResponseEntity<AccountSummaryDto> getAccountSummary(@PathVariable UUID id) {
-        Account account = accountService.getAccountById(id);
-        AccountSummaryDto response = new AccountSummaryDto(
-                account.getId(),
-                account.getUser().getId(),
-                account.getAccountNumber(),
-                account.getBalance(),
-                account.getCurrency(),
-                account.getStatus()
-        );
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(accountService.getAccountSummary(id));
     }
 }

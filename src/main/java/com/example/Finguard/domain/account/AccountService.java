@@ -3,8 +3,11 @@ package com.example.Finguard.domain.account;
 import com.example.Finguard.common.exception.NotFoundException;
 import com.example.Finguard.common.exception.ValidationException;
 import com.example.Finguard.domain.account.dto.AccountSummaryDto;
+import com.example.Finguard.domain.auth.UserPrincipal;
 import com.example.Finguard.domain.user.User;
 import com.example.Finguard.domain.user.UserRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,8 +63,29 @@ public class AccountService {
     }
 
     @Transactional(readOnly = true)
+    public Account getAccountByIdForCurrentUser(UUID id) {
+        Account account = getAccountById(id);
+        ensureCurrentUserCanAccessAccount(account);
+        return account;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Account> getAccountsByUserIdForCurrentUser(UUID userId) {
+        if (isAdmin()) {
+            return accountRepository.findByUserId(userId);
+        }
+
+        UserPrincipal principal = getCurrentPrincipal();
+        if (principal == null || !principal.getUserId().equals(userId)) {
+            throw new ValidationException("You are not allowed to view these accounts");
+        }
+
+        return accountRepository.findByUserId(userId);
+    }
+
+    @Transactional(readOnly = true)
     public AccountSummaryDto getAccountSummary(UUID accountId) {
-        Account account = getAccountById(accountId);
+        Account account = getAccountByIdForCurrentUser(accountId);
         return new AccountSummaryDto(
                 account.getId(),
                 account.getUser().getId(),
@@ -70,5 +94,40 @@ public class AccountService {
                 account.getCurrency(),
                 account.getStatus()
         );
+    }
+
+    private void ensureCurrentUserCanAccessAccount(Account account) {
+        if (isAdmin()) {
+            return;
+        }
+
+        UserPrincipal principal = getCurrentPrincipal();
+        if (principal == null || !principal.getUserId().equals(account.getUser().getId())) {
+            throw new ValidationException("You are not allowed to access this account");
+        }
+    }
+
+    private boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+    }
+
+    private UserPrincipal getCurrentPrincipal() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserPrincipal userPrincipal) {
+            return userPrincipal;
+        }
+
+        return null;
     }
 }
