@@ -3,140 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinGuard Dashboard</title>
+    <title>FinGuard - Banking Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background: radial-gradient(circle at top, rgba(16,185,129,0.15), transparent 45%), #0f172a;
+            background: linear-gradient(135deg, #0f172a 0%, #1a1f35 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .card-gradient {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+        }
+        .account-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .account-card:hover {
+            border-color: rgba(16, 185, 129, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.1);
+        }
+        .transaction-item {
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+        }
+        .transaction-item.completed {
+            border-left-color: #10b981;
+        }
+        .transaction-item.failed {
+            border-left-color: #ef4444;
+        }
+        .nav-active {
+            border-b-2 border-emerald-400;
+        }
+        .input-focus {
+            transition: all 0.2s ease;
+        }
+        .input-focus:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
     </style>
 </head>
-<body class="text-gray-100 min-h-screen p-6">
-<div class="max-w-7xl mx-auto">
-    <header class="border-b border-gray-800 pb-4 mb-8 flex justify-between items-center">
-        <div>
-            <h1 class="text-4xl font-bold tracking-tight text-emerald-400">FinGuard 🛡️</h1>
-            <p class="text-sm text-gray-400">Banking & Ledger Dashboard</p>
-        </div>
-        <div id="userInfo" class="hidden bg-emerald-900/40 border border-emerald-700 rounded-xl px-4 py-2 text-sm text-emerald-300">
-            <span id="currentUser"></span>
-            <button onclick="logout()" class="ml-4 bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-xs">Logout</button>
-        </div>
-    </header>
+<body class="text-gray-100 min-h-screen">
+<div class="min-h-screen flex flex-col">
+    <!-- Auth Section -->
+    <div id="authSection" class="flex-1 flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent mb-2">FinGuard</h1>
+                <p class="text-gray-400">Modern Banking Made Simple</p>
+            </div>
 
-    <div id="authSection" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg">
-            <h2 class="text-xl font-semibold mb-4 text-indigo-400">Register</h2>
-            <form id="registerForm" class="space-y-4">
-                <input type="text" id="regUsername" placeholder="Username" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500">
-                <input type="email" id="regEmail" placeholder="Email" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500">
-                <input type="password" id="regPassword" placeholder="Password" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500">
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Create Account</button>
-            </form>
-            <div id="registerResult" class="mt-4 hidden bg-gray-900 rounded-lg p-3 text-xs font-mono text-gray-300"></div>
-        </div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <button onclick="switchAuthMode('login')" id="loginTab" class="nav-active pb-3 border-b-2 border-emerald-400 text-emerald-400 font-semibold transition">Sign In</button>
+                <button onclick="switchAuthMode('register')" id="registerTab" class="pb-3 border-b-2 border-gray-700 text-gray-400 font-semibold transition">Sign Up</button>
+            </div>
 
-        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg">
-            <h2 class="text-xl font-semibold mb-4 text-emerald-400">Login</h2>
-            <form id="loginForm" class="space-y-4">
-                <input type="text" id="loginUsername" placeholder="Username" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
-                <input type="password" id="loginPassword" placeholder="Password" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Sign In</button>
-            </form>
-            <div id="loginResult" class="mt-4 hidden bg-gray-900 rounded-lg p-3 text-xs font-mono text-gray-300"></div>
+            <!-- Login Form -->
+            <div id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-gray-400 mb-2 font-semibold">Username</label>
+                    <input type="text" id="loginUsername" class="w-full input-focus bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none" placeholder="Enter your username">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-gray-400 mb-2 font-semibold">Password</label>
+                    <input type="password" id="loginPassword" class="w-full input-focus bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none" placeholder="Enter your password">
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-xl transition transform hover:scale-105">
+                    <i class="fas fa-sign-in-alt mr-2"></i> Sign In
+                </button>
+                <div id="loginResult" class="hidden bg-red-900/30 border border-red-700 text-red-300 text-sm px-4 py-3 rounded-xl"></div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="hidden space-y-4">
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-gray-400 mb-2 font-semibold">Username</label>
+                    <input type="text" id="regUsername" class="w-full input-focus bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none" placeholder="Create a username">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-gray-400 mb-2 font-semibold">Email</label>
+                    <input type="email" id="regEmail" class="w-full input-focus bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none" placeholder="your@email.com">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-gray-400 mb-2 font-semibold">Password</label>
+                    <input type="password" id="regPassword" class="w-full input-focus bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none" placeholder="Min. 6 characters">
+                </div>
+                <button onclick="handleRegister()" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 rounded-xl transition transform hover:scale-105">
+                    <i class="fas fa-user-plus mr-2"></i> Create Account
+                </button>
+                <div id="registerResult" class="hidden bg-red-900/30 border border-red-700 text-red-300 text-sm px-4 py-3 rounded-xl"></div>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-gray-700 text-center text-xs text-gray-500">
+                Secure Banking Platform • Encrypted Transactions
+            </div>
         </div>
     </div>
 
-    <div id="appSection" class="hidden space-y-8">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg">
-                <p class="text-xs uppercase tracking-wider text-gray-400">Total Balance</p>
-                <h3 id="totalBalance" class="text-3xl font-bold mt-3 text-emerald-400">$0.00</h3>
+    <!-- Dashboard Section -->
+    <div id="dashboardSection" class="hidden flex flex-col flex-1">
+        <!-- Header -->
+        <header class="glass-effect border-b border-gray-700 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <h1 class="text-2xl font-bold text-emerald-400">FinGuard</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-sm font-semibold text-gray-100" id="userDisplayName">-</p>
+                        <p class="text-xs text-gray-400">Active Account</p>
+                    </div>
+                    <button onclick="handleLogout()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg text-sm font-medium transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Sign Out
+                    </button>
+                </div>
             </div>
-            <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg">
-                <p class="text-xs uppercase tracking-wider text-gray-400">Accounts</p>
-                <h3 id="accountCount" class="text-3xl font-bold mt-3 text-indigo-400">0</h3>
-            </div>
-            <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow-lg">
-                <p class="text-xs uppercase tracking-wider text-gray-400">Recent Status</p>
-                <h3 id="recentStatus" class="text-3xl font-bold mt-3 text-blue-400">--</h3>
-            </div>
-        </div>
+        </header>
 
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div class="xl:col-span-2 space-y-6">
-                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                        <h2 class="text-xl font-semibold text-indigo-400">My Accounts</h2>
-                        <div class="flex gap-3">
-                            <input id="userIdInput" type="text" placeholder="User UUID" class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500">
-                            <button onclick="loadAccountsForCurrentUser()" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg text-sm font-medium transition">Load</button>
+        <!-- Main Content -->
+        <div class="flex-1 overflow-auto">
+            <div class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+                <!-- Top Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card-gradient border border-gray-700 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-xs uppercase tracking-widest text-gray-400 font-semibold">Total Balance</p>
+                            <i class="fas fa-wallet text-emerald-400 text-xl"></i>
+                        </div>
+                        <h2 class="text-4xl font-bold text-emerald-400 mb-1" id="totalBalance">$0.00</h2>
+                        <p class="text-xs text-gray-500">Across all accounts</p>
+                    </div>
+
+                    <div class="card-gradient border border-gray-700 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-xs uppercase tracking-widest text-gray-400 font-semibold">Accounts</p>
+                            <i class="fas fa-credit-card text-blue-400 text-xl"></i>
+                        </div>
+                        <h2 class="text-4xl font-bold text-blue-400 mb-1" id="accountCount">0</h2>
+                        <p class="text-xs text-gray-500">Active accounts</p>
+                    </div>
+
+                    <div class="card-gradient border border-gray-700 rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-xs uppercase tracking-widest text-gray-400 font-semibold">Last Activity</p>
+                            <i class="fas fa-history text-purple-400 text-xl"></i>
+                        </div>
+                        <h2 class="text-4xl font-bold text-purple-400 mb-1" id="lastActivityType">—</h2>
+                        <p class="text-xs text-gray-500">Just now</p>
+                    </div>
+                </div>
+
+                <!-- Accounts Section -->
+                <div>
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-100">My Accounts</h2>
+                        <button onclick="showModal('addAccountModal')" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-sm font-medium transition">
+                            <i class="fas fa-plus mr-2"></i> Add Account
+                        </button>
+                    </div>
+
+                    <div id="accountsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="flex items-center justify-center p-8 text-gray-500">
+                            <i class="fas fa-inbox text-2xl mr-3"></i> No accounts yet. Create one to get started.
                         </div>
                     </div>
-                    <div id="accountsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
 
-                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                        <h2 class="text-xl font-semibold text-emerald-400">Account Activity</h2>
-                        <div class="flex gap-3">
-                            <input id="accountIdInput" type="text" placeholder="Account UUID" class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
-                            <button onclick="loadAccountSummaryAndTransactions()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg text-sm font-medium transition">View</button>
+                <!-- Transactions Section -->
+                <div>
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-100">Recent Activity</h2>
+                        <button onclick="showModal('transferModal')" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition">
+                            <i class="fas fa-arrow-right-arrow-left mr-2"></i> Transfer Money
+                        </button>
+                    </div>
+
+                    <div class="border border-gray-700 rounded-2xl overflow-hidden">
+                        <div id="transactionsList" class="divide-y divide-gray-700">
+                            <div class="p-8 text-center text-gray-500">
+                                <i class="fas fa-inbox text-3xl mb-3 block"></i> No transactions yet.
+                            </div>
                         </div>
                     </div>
-
-                    <div id="accountSummary" class="mb-4 p-4 bg-gray-900 rounded-xl border border-gray-700 hidden"></div>
-
-                    <div class="flex items-center gap-3 mb-4">
-                        <label class="text-xs uppercase tracking-wider text-gray-400">Filter</label>
-                        <select id="statusFilter" class="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
-                            <option value="">All</option>
-                            <option value="COMPLETED">Completed</option>
-                            <option value="FAILED">Failed</option>
-                            <option value="PENDING">Pending</option>
-                        </select>
-                        <button onclick="loadCurrentlySelectedTransactions()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-medium transition">Refresh</button>
-                    </div>
-
-                    <div id="transactionsContainer" class="space-y-3 max-h-[500px] overflow-auto"></div>
-                </div>
-            </div>
-
-            <div class="space-y-6">
-                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg">
-                    <h2 class="text-xl font-semibold mb-4 text-indigo-400">Create User</h2>
-                    <form id="userForm" class="space-y-4">
-                        <input type="text" id="fullName" placeholder="Full Name" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500">
-                        <input type="email" id="email" placeholder="Email" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500">
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Create User</button>
-                    </form>
-                    <div id="userResult" class="mt-4 hidden bg-gray-900 rounded-lg p-3 text-xs font-mono text-gray-300"></div>
-                </div>
-
-                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg">
-                    <h2 class="text-xl font-semibold mb-4 text-indigo-400">Create Account</h2>
-                    <form id="accountForm" class="space-y-4">
-                        <input type="text" id="accUserId" placeholder="User UUID" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500">
-                        <input type="text" id="accountNumber" placeholder="Account Number" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500">
-                        <input type="number" step="0.01" id="initialBalance" value="1000.00" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-indigo-500">
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Create Account</button>
-                    </form>
-                    <div id="accountResult" class="mt-4 hidden bg-gray-900 rounded-lg p-3 text-xs font-mono text-gray-300"></div>
-                </div>
-
-                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg">
-                    <h2 class="text-xl font-semibold mb-4 text-emerald-400">Transfer</h2>
-                    <form id="transferForm" class="space-y-4">
-                        <input type="text" id="sourceAccountId" placeholder="Source Account UUID" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
-                        <input type="text" id="destinationAccountId" placeholder="Destination Account UUID" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
-                        <input type="number" step="0.01" id="transferAmount" value="50.00" required class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
-                        <input type="text" id="idempotencyKey" placeholder="Idempotency Key" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2.5 rounded-lg text-sm transition">Send Transfer</button>
-                    </form>
-                    <div id="transferResult" class="mt-4 hidden bg-gray-900 rounded-lg p-3 text-xs font-mono text-gray-300"></div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Modals -->
+
+<!-- Add Account Modal -->
+<div id="addAccountModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8 w-full max-w-md">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-100">Create Account</h3>
+            <button onclick="hideModal('addAccountModal')" class="text-gray-400 hover:text-gray-300">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs uppercase tracking-widest text-gray-400 mb-2 font-semibold">Account Name</label>
+                <input type="text" id="accountName" class="w-full input-focus bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none" placeholder="e.g., Checking Account">
+            </div>
+            <div>
+                <label class="block text-xs uppercase tracking-widest text-gray-400 mb-2 font-semibold">Account Number</label>
+                <input type="text" id="accountNumber" class="w-full input-focus bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none" placeholder="e.g., ACC-001">
+            </div>
+            <div>
+                <label class="block text-xs uppercase tracking-widest text-gray-400 mb-2 font-semibold">Opening Balance ($)</label>
+                <input type="number" step="0.01" id="accountBalance" value="1000.00" class="w-full input-focus bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none">
+            </div>
+            <button onclick="handleCreateAccount()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition mt-6">
+                <i class="fas fa-check mr-2"></i> Create Account
+            </button>
+        </div>
+
+        <div id="addAccountResult" class="hidden mt-4 bg-red-900/30 border border-red-700 text-red-300 text-sm px-4 py-3 rounded-xl"></div>
+    </div>
+</div>
+
+<!-- Transfer Modal -->
+<div id="transferModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-gray-800 border border-gray-700 rounded-2xl p-8 w-full max-w-md">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-bold text-gray-100">Transfer Money</h3>
+            <button onclick="hideModal('transferModal')" class="text-gray-400 hover:text-gray-300">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs uppercase tracking-widest text-gray-400 mb-2 font-semibold">From Account</label>
+                <select id="transferFrom" class="w-full input-focus bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none">
+                    <option value="">Select account...</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs uppercase tracking-widest text-gray-400 mb-2 font-semibold">To Account</label>
+                <select id="transferTo" class="w-full input-focus bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none">
+                    <option value="">Select account...</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs uppercase tracking-widest text-gray-400 mb-2 font-semibold">Amount ($)</label>
+                <input type="number" step="0.01" id="transferAmount" value="50.00" class="w-full input-focus bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none">
+            </div>
+            <button onclick="handleTransfer()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition mt-6">
+                <i class="fas fa-check mr-2"></i> Send Money
+            </button>
+        </div>
+
+        <div id="transferResult" class="hidden mt-4 bg-red-900/30 border border-red-700 text-red-300 text-sm px-4 py-3 rounded-xl"></div>
     </div>
 </div>
 
@@ -145,115 +272,193 @@
     let token = null;
     let currentUsername = null;
     let currentUserId = null;
-    let currentlySelectedAccountId = null;
-    let accountsCache = [];
+    let accountsData = [];
+    let selectedAccountId = null;
 
-    document.getElementById('idempotencyKey').value = 'tx-' + Date.now();
+    // Auth handlers
+    function switchAuthMode(mode) {
+        document.getElementById('loginTab').classList.toggle('nav-active', mode === 'login');
+        document.getElementById('registerTab').classList.toggle('nav-active', mode === 'register');
+        document.getElementById('loginForm').classList.toggle('hidden', mode !== 'login');
+        document.getElementById('registerForm').classList.toggle('hidden', mode !== 'register');
+    }
 
-    document.getElementById('registerForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const payload = {
-            username: document.getElementById('regUsername').value,
-            email: document.getElementById('regEmail').value,
-            password: document.getElementById('regPassword').value
-        };
-
-        try {
-            const res = await fetch(`${API_BASE}/auth/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            if (res.ok) {
-                token = data.token;
-                currentUsername = data.username;
-                currentUserId = data.userId;
-                document.getElementById('userIdInput').value = currentUserId;
-                document.getElementById('accUserId').value = currentUserId;
-                showResult('registerResult', `✅ Registered as ${data.username}`);
-                showAppSection();
-                loadAccountsForCurrentUser();
-            } else {
-                showResult('registerResult', `❌ ${data.message || 'Registration failed'}`);
-            }
-        } catch (err) {
-            showResult('registerResult', `❌ ${err.message}`);
-        }
-    });
-
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const payload = {
-            username: document.getElementById('loginUsername').value,
-            password: document.getElementById('loginPassword').value
-        };
+    async function handleLogin() {
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        if (!username || !password) return alert('Please fill all fields');
 
         try {
             const res = await fetch(`${API_BASE}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ username, password })
             });
             const data = await res.json();
-            if (res.ok) {
-                token = data.token;
-                currentUsername = data.username;
-                currentUserId = data.userId;
-                document.getElementById('userIdInput').value = currentUserId;
-                document.getElementById('accUserId').value = currentUserId;
-                showResult('loginResult', `✅ Logged in as ${data.username}`);
-                showAppSection();
-                loadAccountsForCurrentUser();
-            } else {
-                showResult('loginResult', `❌ ${data.message || 'Login failed'}`);
-            }
+            if (!res.ok) throw new Error(data.message || 'Login failed');
+            token = data.token;
+            currentUsername = data.username;
+            currentUserId = data.userId;
+            showDashboard();
+            loadAccounts();
         } catch (err) {
-            showResult('loginResult', `❌ ${err.message}`);
+            document.getElementById('loginResult').textContent = `❌ ${err.message}`;
+            document.getElementById('loginResult').classList.remove('hidden');
         }
-    });
+    }
 
-    document.getElementById('userForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const payload = {
-            fullName: document.getElementById('fullName').value,
-            email: document.getElementById('email').value
-        };
+    async function handleRegister() {
+        const username = document.getElementById('regUsername').value;
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        if (!username || !email || !password) return alert('Please fill all fields');
 
         try {
-            const res = await fetch(`${API_BASE}/users`, {
+            const res = await fetch(`${API_BASE}/auth/register`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
             });
             const data = await res.json();
-            if (res.ok) {
-                showResult('userResult', `✅ User created: ${data.id}`);
-                document.getElementById('accUserId').value = data.id;
-                if (!currentUserId) {
-                    currentUserId = data.id;
-                    document.getElementById('userIdInput').value = currentUserId;
-                    document.getElementById('accUserId').value = currentUserId;
-                }
-            } else {
-                showResult('userResult', `❌ ${data.message || 'Failed to create user'}`);
-            }
+            if (!res.ok) throw new Error(data.message || 'Registration failed');
+            token = data.token;
+            currentUsername = data.username;
+            currentUserId = data.userId;
+            showDashboard();
+            loadAccounts();
         } catch (err) {
-            showResult('userResult', `❌ ${err.message}`);
+            document.getElementById('registerResult').textContent = `❌ ${err.message}`;
+            document.getElementById('registerResult').classList.remove('hidden');
         }
-    });
+    }
 
-    document.getElementById('accountForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const payload = {
-            userId: document.getElementById('accUserId').value,
-            accountNumber: document.getElementById('accountNumber').value,
-            initialBalance: parseFloat(document.getElementById('initialBalance').value),
-            currency: 'USD'
-        };
+    // Dashboard handlers
+    function showDashboard() {
+        document.getElementById('authSection').classList.add('hidden');
+        document.getElementById('dashboardSection').classList.remove('hidden');
+        document.getElementById('userDisplayName').textContent = currentUsername;
+    }
+
+    async function loadAccounts() {
+        if (!token || !currentUserId) return;
+        try {
+            const res = await fetch(`${API_BASE}/accounts/user/${currentUserId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message);
+            accountsData = data;
+            renderAccounts();
+            updateStats();
+            populateTransferSelects();
+        } catch (err) {
+            console.error('Failed to load accounts:', err);
+        }
+    }
+
+    function renderAccounts() {
+        const grid = document.getElementById('accountsGrid');
+        if (!accountsData.length) {
+            grid.innerHTML = '<div class="col-span-full flex items-center justify-center p-8 text-gray-500"><i class="fas fa-inbox text-2xl mr-3"></i> No accounts yet.</div>';
+            return;
+        }
+
+        grid.innerHTML = accountsData.map(acc => `
+            <div class="account-card rounded-2xl p-6 cursor-pointer transition" onclick="selectAccount('${acc.id}', '${acc.accountNumber}')">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <p class="text-sm text-gray-400 uppercase tracking-widest font-semibold">Account</p>
+                        <h3 class="text-lg font-bold text-gray-100 mt-1">${acc.accountNumber}</h3>
+                    </div>
+                    <span class="text-xs px-3 py-1 rounded-full font-semibold ${acc.status === 'ACTIVE' ? 'bg-emerald-900/50 text-emerald-300' : 'bg-red-900/50 text-red-300'}">
+                        ${acc.status}
+                    </span>
+                </div>
+                <div class="border-t border-gray-700 pt-4">
+                    <p class="text-xs text-gray-400 uppercase tracking-widest font-semibold mb-1">Balance</p>
+                    <h2 class="text-3xl font-bold text-emerald-400">$${formatMoney(acc.balance)}</h2>
+                </div>
+                <div class="mt-4 text-xs text-gray-500">${acc.currency}</div>
+            </div>
+        `).join('');
+    }
+
+    function updateStats() {
+        const total = accountsData.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
+        document.getElementById('totalBalance').textContent = `$${formatMoney(total)}`;
+        document.getElementById('accountCount').textContent = accountsData.length;
+    }
+
+    function populateTransferSelects() {
+        const fromSel = document.getElementById('transferFrom');
+        const toSel = document.getElementById('transferTo');
+        const options = accountsData.map(acc => `<option value="${acc.id}">${acc.accountNumber} ($${formatMoney(acc.balance)})</option>`).join('');
+        fromSel.innerHTML = '<option value="">Select account...</option>' + options;
+        toSel.innerHTML = '<option value="">Select account...</option>' + options;
+    }
+
+    function selectAccount(accountId, name) {
+        selectedAccountId = accountId;
+        loadTransactions(accountId);
+    }
+
+    async function loadTransactions(accountId) {
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_BASE}/transactions/account/${accountId}?page=0&size=10`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message);
+
+            const transactions = data.content || [];
+            const list = document.getElementById('transactionsList');
+
+            if (!transactions.length) {
+                list.innerHTML = '<div class="p-8 text-center text-gray-500"><i class="fas fa-inbox text-3xl mb-3 block"></i> No transactions yet.</div>';
+                return;
+            }
+
+            list.innerHTML = transactions.map(tx => {
+                const isOutgoing = tx.sourceAccountId === accountId;
+                const icon = isOutgoing ? 'fa-arrow-down' : 'fa-arrow-up';
+                const iconBg = isOutgoing ? 'bg-red-900/30' : 'bg-emerald-900/30';
+                const textColor = isOutgoing ? 'text-red-400' : 'text-emerald-400';
+                const statusBadge = tx.status === 'COMPLETED' ? 'bg-emerald-900/30 text-emerald-300' : 'bg-red-900/30 text-red-300';
+
+                return `
+                    <div class="transaction-item ${tx.status.toLowerCase()} px-6 py-4 flex items-center justify-between hover:bg-gray-900/50 transition">
+                        <div class="flex items-center gap-4">
+                            <div class="${iconBg} w-12 h-12 rounded-full flex items-center justify-center">
+                                <i class="fas ${icon} ${textColor}"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-100">${isOutgoing ? 'Sent Money' : 'Received Money'}</p>
+                                <p class="text-xs text-gray-500 mt-1">${tx.type}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold ${textColor}">
+                                ${isOutgoing ? '-' : '+'}$${formatMoney(tx.amount)}
+                            </p>
+                            <span class="text-xs px-2 py-1 rounded-full font-semibold ${statusBadge}">${tx.status}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('lastActivityType').textContent = transactions[0]?.type || '—';
+        } catch (err) {
+            console.error('Failed to load transactions:', err);
+        }
+    }
+
+    async function handleCreateAccount() {
+        const name = document.getElementById('accountName').value;
+        const number = document.getElementById('accountNumber').value;
+        const balance = document.getElementById('accountBalance').value;
+
+        if (!name || !number || !balance) return alert('Fill all fields');
 
         try {
             const res = await fetch(`${API_BASE}/accounts`, {
@@ -262,32 +467,33 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    userId: currentUserId,
+                    accountNumber: number,
+                    initialBalance: parseFloat(balance),
+                    currency: 'USD'
+                })
             });
             const data = await res.json();
-            if (res.ok) {
-                showResult('accountResult', `✅ Account created: ${data.id} | Balance: $${data.balance}`);
-                document.getElementById('sourceAccountId').value = data.id;
-                document.getElementById('accountIdInput').value = data.id;
-                currentlySelectedAccountId = data.id;
-                loadAccountsForCurrentUser();
-            } else {
-                showResult('accountResult', `❌ ${data.message || 'Failed to create account'}`);
-            }
+            if (!res.ok) throw new Error(data.message);
+            hideModal('addAccountModal');
+            loadAccounts();
+            document.getElementById('accountName').value = '';
+            document.getElementById('accountNumber').value = '';
+            document.getElementById('accountBalance').value = '1000.00';
         } catch (err) {
-            showResult('accountResult', `❌ ${err.message}`);
+            document.getElementById('addAccountResult').textContent = `❌ ${err.message}`;
+            document.getElementById('addAccountResult').classList.remove('hidden');
         }
-    });
+    }
 
-    document.getElementById('transferForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const payload = {
-            sourceAccountId: document.getElementById('sourceAccountId').value,
-            destinationAccountId: document.getElementById('destinationAccountId').value,
-            amount: parseFloat(document.getElementById('transferAmount').value),
-            currency: 'USD',
-            idempotencyKey: document.getElementById('idempotencyKey').value || 'tx-' + Date.now()
-        };
+    async function handleTransfer() {
+        const from = document.getElementById('transferFrom').value;
+        const to = document.getElementById('transferTo').value;
+        const amount = document.getElementById('transferAmount').value;
+
+        if (!from || !to || !amount) return alert('Fill all fields');
+        if (from === to) return alert('Cannot transfer to the same account');
 
         try {
             const res = await fetch(`${API_BASE}/transactions/transfer`, {
@@ -296,159 +502,48 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    sourceAccountId: from,
+                    destinationAccountId: to,
+                    amount: parseFloat(amount),
+                    currency: 'USD',
+                    idempotencyKey: 'tx-' + Date.now()
+                })
             });
             const data = await res.json();
-            if (res.ok) {
-                showResult('transferResult', `✅ Transfer ${data.status} | Amount: $${data.amount}`);
-                document.getElementById('idempotencyKey').value = 'tx-' + Date.now();
-                if (currentlySelectedAccountId) {
-                    loadAccountSummaryAndTransactions();
-                }
-            } else {
-                showResult('transferResult', `❌ ${data.message || 'Transfer failed'}`);
-            }
+            if (!res.ok) throw new Error(data.message);
+            hideModal('transferModal');
+            loadAccounts();
+            if (selectedAccountId) loadTransactions(selectedAccountId);
+            document.getElementById('transferAmount').value = '50.00';
         } catch (err) {
-            showResult('transferResult', `❌ ${err.message}`);
-        }
-    });
-
-    async function loadAccountsForCurrentUser() {
-        const userId = document.getElementById('userIdInput').value || currentUserId;
-        if (!userId || !token) return;
-
-        try {
-            const res = await fetch(`${API_BASE}/accounts/user/${userId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.message || 'Could not load accounts');
-            }
-
-            accountsCache = data || [];
-            document.getElementById('accountCount').textContent = String(accountsCache.length);
-
-            const total = accountsCache.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
-            document.getElementById('totalBalance').textContent = `$${formatMoney(total)}`;
-
-            const grid = document.getElementById('accountsGrid');
-            if (!accountsCache.length) {
-                grid.innerHTML = '<div class="col-span-full text-gray-400 text-sm">No accounts yet for this user.</div>';
-                return;
-            }
-
-            grid.innerHTML = accountsCache.map(account => `
-                <button class="text-left bg-gray-900 border border-gray-700 rounded-xl p-4 hover:border-emerald-500 transition" onclick="selectAccount('${account.id}')">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs uppercase tracking-wider text-gray-400">${account.accountNumber}</span>
-                        <span class="text-xs px-2 py-1 rounded-full ${account.status === 'ACTIVE' ? 'bg-emerald-900 text-emerald-300' : 'bg-red-900 text-red-300'}">${account.status}</span>
-                    </div>
-                    <div class="mt-3 text-2xl font-bold text-emerald-400">$${formatMoney(account.balance)}</div>
-                    <div class="mt-2 text-xs text-gray-400">${account.currency} • ${account.userId}</div>
-                </button>
-            `).join('');
-
-            if (!currentlySelectedAccountId && accountsCache[0]) {
-                selectAccount(accountsCache[0].id);
-            }
-        } catch (err) {
-            showToast(`⚠️ ${err.message}`);
+            document.getElementById('transferResult').textContent = `❌ ${err.message}`;
+            document.getElementById('transferResult').classList.remove('hidden');
         }
     }
 
-    function selectAccount(accountId) {
-        currentlySelectedAccountId = accountId;
-        document.getElementById('accountIdInput').value = accountId;
-        document.getElementById('sourceAccountId').value = accountId;
-        loadAccountSummaryAndTransactions();
+    function handleLogout() {
+        token = null;
+        currentUsername = null;
+        currentUserId = null;
+        accountsData = [];
+        selectedAccountId = null;
+        document.getElementById('dashboardSection').classList.add('hidden');
+        document.getElementById('authSection').classList.remove('hidden');
+        document.getElementById('loginUsername').value = '';
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('regUsername').value = '';
+        document.getElementById('regEmail').value = '';
+        document.getElementById('regPassword').value = '';
     }
 
-    async function loadAccountSummaryAndTransactions() {
-        const accountId = document.getElementById('accountIdInput').value || currentlySelectedAccountId;
-        if (!accountId || !token) return;
-        currentlySelectedAccountId = accountId;
-
-        try {
-            const summaryRes = await fetch(`${API_BASE}/accounts/${accountId}/summary`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const summaryData = await summaryRes.json();
-            if (!summaryRes.ok) throw new Error(summaryData.message || 'Failed to load account summary');
-
-            const summaryBox = document.getElementById('accountSummary');
-            summaryBox.classList.remove('hidden');
-            summaryBox.innerHTML = `
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                    <div>
-                        <p class="text-xs uppercase tracking-wider text-gray-400">Selected Account</p>
-                        <h3 class="text-xl font-bold text-emerald-400">${summaryData.accountNumber}</h3>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs uppercase tracking-wider text-gray-400">Balance</p>
-                        <h4 class="text-2xl font-bold text-emerald-400">$${formatMoney(summaryData.balance)}</h4>
-                    </div>
-                </div>
-                <div class="mt-3 text-xs text-gray-400">
-                    Status: <span class="text-gray-200">${summaryData.status}</span> • Currency: <span class="text-gray-200">${summaryData.currency}</span>
-                </div>
-            `;
-
-            loadCurrentlySelectedTransactions();
-        } catch (err) {
-            showToast(`⚠️ ${err.message}`);
-        }
+    function showModal(id) {
+        document.getElementById(id).classList.remove('hidden');
     }
 
-    async function loadCurrentlySelectedTransactions() {
-        const accountId = document.getElementById('accountIdInput').value || currentlySelectedAccountId;
-        if (!accountId || !token) return;
-
-        const status = document.getElementById('statusFilter').value;
-        const query = status ? `?status=${encodeURIComponent(status)}&page=0&size=10` : `?page=0&size=10`;
-
-        try {
-            const res = await fetch(`${API_BASE}/transactions/account/${accountId}${query}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Failed to load transactions');
-
-            const list = document.getElementById('transactionsContainer');
-            const transactions = data.content || [];
-            document.getElementById('recentStatus').textContent = transactions[0]?.status || 'N/A';
-
-            if (!transactions.length) {
-                list.innerHTML = '<div class="text-sm text-gray-400">No transactions found for this filter.</div>';
-                return;
-            }
-
-            list.innerHTML = transactions.map(tx => {
-                const isOutgoing = tx.sourceAccountId === accountId;
-                const other = isOutgoing ? tx.destinationAccountId : tx.sourceAccountId;
-                const badgeClass = tx.status === 'COMPLETED' ? 'bg-emerald-900 text-emerald-300' : tx.status === 'FAILED' ? 'bg-red-900 text-red-300' : 'bg-yellow-900 text-yellow-300';
-                return `
-                    <div class="bg-gray-900 border border-gray-700 rounded-xl p-4">
-                        <div class="flex justify-between items-center gap-3">
-                            <div>
-                                <div class="text-xs uppercase tracking-wider text-gray-400">${isOutgoing ? 'Outgoing' : 'Incoming'} transfer</div>
-                                <div class="text-sm text-gray-200 mt-1">${other || '—'}</div>
-                            </div>
-                            <span class="px-2 py-1 text-[10px] rounded-full ${badgeClass}">${tx.status}</span>
-                        </div>
-                        <div class="mt-3 flex justify-between items-center">
-                            <div class="text-lg font-bold ${isOutgoing ? 'text-red-400' : 'text-emerald-400'}">
-                                ${isOutgoing ? '-' : '+'}$${formatMoney(tx.amount)}
-                            </div>
-                            <div class="text-xs text-gray-400">${tx.type}</div>
-                        </div>
-                        <div class="mt-2 text-[11px] text-gray-500">ID: ${tx.id}</div>
-                    </div>
-                `;
-            }).join('');
-        } catch (err) {
-            showToast(`⚠️ ${err.message}`);
-        }
+    function hideModal(id) {
+        document.getElementById(id).classList.add('hidden');
+        document.getElementById(id + 'Result')?.classList.add('hidden');
     }
 
     function formatMoney(value) {
@@ -456,45 +551,11 @@
         return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    function showResult(elementId, message) {
-        const el = document.getElementById(elementId);
-        el.textContent = message;
-        el.classList.remove('hidden');
-    }
-
-    function showToast(message) {
-        const el = document.getElementById('transferResult');
-        el.textContent = message;
-        el.classList.remove('hidden');
-    }
-
-    function showAppSection() {
-        document.getElementById('authSection').classList.add('hidden');
-        document.getElementById('appSection').classList.remove('hidden');
-        document.getElementById('userInfo').classList.remove('hidden');
-        document.getElementById('currentUser').textContent = `${currentUsername} (${currentUserId})`;
-    }
-
-    function logout() {
-        token = null;
-        currentUsername = null;
-        currentUserId = null;
-        currentlySelectedAccountId = null;
-        accountsCache = [];
-        document.getElementById('authSection').classList.remove('hidden');
-        document.getElementById('appSection').classList.add('hidden');
-        document.getElementById('userInfo').classList.add('hidden');
-        document.getElementById('registerForm').reset();
-        document.getElementById('loginForm').reset();
-        document.getElementById('userForm').reset();
-        document.getElementById('accountForm').reset();
-        document.getElementById('transferForm').reset();
-        document.getElementById('accountsGrid').innerHTML = '';
-        document.getElementById('transactionsContainer').innerHTML = '';
-        document.getElementById('accountSummary').classList.add('hidden');
-        document.getElementById('statusFilter').value = '';
-        document.getElementById('idempotencyKey').value = 'tx-' + Date.now();
-    }
+    // Close modals on outside click
+    document.addEventListener('click', (e) => {
+        if (e.target.id === 'addAccountModal') hideModal('addAccountModal');
+        if (e.target.id === 'transferModal') hideModal('transferModal');
+    });
 </script>
 </body>
 </html>
