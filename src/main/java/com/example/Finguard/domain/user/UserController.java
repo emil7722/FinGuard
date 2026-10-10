@@ -1,5 +1,6 @@
 package com.example.Finguard.domain.user;
 
+import com.example.Finguard.domain.user.dto.UserResponseDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,20 +21,39 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@Valid @RequestBody UserRequestDto request) {
+    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto request) {
         User createdUser = userService.createUser(request);
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+        UserResponseDto response = new UserResponseDto(
+                createdUser.getId(),
+                createdUser.getFullName(),
+                createdUser.getEmail(),
+                createdUser.getStatus()
+        );
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping
     @Secured("ROLE_ADMIN")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers().stream()
+                .map(user -> new UserResponseDto(
+                        user.getId(),
+                        user.getFullName(),
+                        user.getEmail(),
+                        user.getStatus()))
+                .toList());
     }
 
     @GetMapping("/{id}")
     @Secured({"ROLE_USER", "ROLE_ADMIN"})
-    public ResponseEntity<User> getUserById(@PathVariable UUID id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id) {
+        User user = userService.getUserById(id);
+        UserResponseDto response = new UserResponseDto(
+                user.getId(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getStatus()
+        );
+        return ResponseEntity.ok(response);
     }
 }

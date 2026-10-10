@@ -8,7 +8,7 @@ import com.example.Finguard.domain.account.AccountRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 public class TransactionService {
@@ -23,12 +23,10 @@ public class TransactionService {
 
     @Transactional
     public Transaction processTransfer(TransferRequestDto request) {
-        // 1. Validate request
         if (request.getSourceAccountId().equals(request.getDestinationAccountId())) {
             throw new ValidationException("Source and destination accounts cannot be the same");
         }
 
-        // 2. Idempotency check
         if (request.getIdempotencyKey() != null) {
             var existing = transactionRepository.findByIdempotencyKey(request.getIdempotencyKey());
             if (existing.isPresent()) {
@@ -43,14 +41,12 @@ public class TransactionService {
         transaction.setIdempotencyKey(request.getIdempotencyKey());
 
         try {
-            // 3. Fetch and validate accounts
             Account source = accountRepository.findById(request.getSourceAccountId())
                     .orElseThrow(() -> new NotFoundException("Account", request.getSourceAccountId().toString()));
 
             Account destination = accountRepository.findById(request.getDestinationAccountId())
                     .orElseThrow(() -> new NotFoundException("Account", request.getDestinationAccountId().toString()));
 
-            // 4. Validate account status
             if (!"ACTIVE".equals(source.getStatus())) {
                 throw new ValidationException("Source account is not active");
             }
@@ -61,21 +57,17 @@ public class TransactionService {
             transaction.setSourceAccount(source);
             transaction.setDestinationAccount(destination);
 
-            // 5. Validate sufficient funds
             if (source.getBalance().compareTo(request.getAmount()) < 0) {
                 throw new InsufficientFundsException(
                         "Insufficient funds. Available: " + source.getBalance() + ", Requested: " + request.getAmount()
                 );
             }
 
-            // 6. Perform transfer
             source.setBalance(source.getBalance().subtract(request.getAmount()));
             destination.setBalance(destination.getBalance().add(request.getAmount()));
 
             accountRepository.save(source);
             accountRepository.save(destination);
-
-            // 7. Mark as completed
             transaction.setStatus("COMPLETED");
 
         } catch (Exception e) {
@@ -86,5 +78,15 @@ public class TransactionService {
         }
 
         return transactionRepository.save(transaction);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Transaction> getTransactionsByAccount(java.util.UUID accountId) {
+        return transactionRepository.findAll().stream()
+                .filter(transaction ->
+                        (transaction.getSourceAccount() != null && transaction.getSourceAccount().getId().equals(accountId)) ||
+                        (transaction.getDestinationAccount() != null && transaction.getDestinationAccount().getId().equals(accountId)))
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .toList();
     }
 }
