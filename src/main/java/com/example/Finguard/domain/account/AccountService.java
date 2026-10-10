@@ -1,6 +1,7 @@
 package com.example.Finguard.domain.account;
 
-
+import com.example.Finguard.common.exception.NotFoundException;
+import com.example.Finguard.common.exception.ValidationException;
 import com.example.Finguard.domain.user.User;
 import com.example.Finguard.domain.user.UserRepository;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,12 @@ public class AccountService {
     @Transactional
     public Account createAccount(AccountRequestDto request) {
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
+                .orElseThrow(() -> new NotFoundException("User", request.getUserId().toString()));
+
+        // Check if account number already exists
+        if (accountRepository.findByAccountNumber(request.getAccountNumber()).isPresent()) {
+            throw new ValidationException("Account number already exists: " + request.getAccountNumber());
+        }
 
         Account account = new Account();
         account.setUser(user);
@@ -50,6 +56,6 @@ public class AccountService {
     @Transactional(readOnly = true)
     public Account getAccountById(UUID id) {
         return accountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Account not found with id: " + id));
+                .orElseThrow(() -> new NotFoundException("Account", id.toString()));
     }
 }

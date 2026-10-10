@@ -1,5 +1,6 @@
 package com.example.Finguard.domain.transaction;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +16,7 @@ public class TransactionController {
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<Transaction> transfer(@RequestBody TransferRequestDto request) {
+    public ResponseEntity<Transaction> transfer(@Valid @RequestBody TransferRequestDto request) {
         Transaction transaction = transactionService.processTransfer(request);
         return new ResponseEntity<>(transaction, HttpStatus.CREATED);
     }

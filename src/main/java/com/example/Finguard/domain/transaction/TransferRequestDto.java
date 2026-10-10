@@ -1,13 +1,24 @@
 package com.example.Finguard.domain.transaction;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.util.UUID;
 
 public class TransferRequestDto {
+
+    @NotNull(message = "Source account ID is required")
     private UUID sourceAccountId;
+
+    @NotNull(message = "Destination account ID is required")
     private UUID destinationAccountId;
+
+    @NotNull(message = "Amount is required")
+    @Positive(message = "Amount must be positive")
     private BigDecimal amount;
-    private String currency;
+
+    private String currency = "USD";
+
     private String idempotencyKey;
 
     // Getters and Setters

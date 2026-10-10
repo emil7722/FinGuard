@@ -1,5 +1,8 @@
 package com.example.Finguard.domain.transaction;
 
+import com.example.Finguard.common.exception.InsufficientFundsException;
+import com.example.Finguard.common.exception.NotFoundException;
+import com.example.Finguard.common.exception.ValidationException;
 import com.example.Finguard.domain.account.Account;
 import com.example.Finguard.domain.account.AccountRepository;
 import org.springframework.stereotype.Service;
@@ -20,7 +23,12 @@ public class TransactionService {
 
     @Transactional
     public Transaction processTransfer(TransferRequestDto request) {
-        // 1. Idempotency check: If this key was already processed, return the existing transaction
+        // 1. Validate request
+        if (request.getSourceAccountId().equals(request.getDestinationAccountId())) {
+            throw new ValidationException("Source and destination accounts cannot be the same");
+        }
+
+        // 2. Idempotency check
         if (request.getIdempotencyKey() != null) {
             var existing = transactionRepository.findByIdempotencyKey(request.getIdempotencyKey());
             if (existing.isPresent()) {
@@ -35,36 +43,46 @@ public class TransactionService {
         transaction.setIdempotencyKey(request.getIdempotencyKey());
 
         try {
-            // 2. Fetch Source and Destination Accounts
+            // 3. Fetch and validate accounts
             Account source = accountRepository.findById(request.getSourceAccountId())
-                    .orElseThrow(() -> new RuntimeException("Source account not found"));
+                    .orElseThrow(() -> new NotFoundException("Account", request.getSourceAccountId().toString()));
 
             Account destination = accountRepository.findById(request.getDestinationAccountId())
-                    .orElseThrow(() -> new RuntimeException("Destination account not found"));
+                    .orElseThrow(() -> new NotFoundException("Account", request.getDestinationAccountId().toString()));
+
+            // 4. Validate account status
+            if (!"ACTIVE".equals(source.getStatus())) {
+                throw new ValidationException("Source account is not active");
+            }
+            if (!"ACTIVE".equals(destination.getStatus())) {
+                throw new ValidationException("Destination account is not active");
+            }
 
             transaction.setSourceAccount(source);
             transaction.setDestinationAccount(destination);
 
-            // 3. Validate Sufficient Funds
+            // 5. Validate sufficient funds
             if (source.getBalance().compareTo(request.getAmount()) < 0) {
-                throw new RuntimeException("Insufficient funds in source account");
+                throw new InsufficientFundsException(
+                        "Insufficient funds. Available: " + source.getBalance() + ", Requested: " + request.getAmount()
+                );
             }
 
-            // 4. Perform Transfer
+            // 6. Perform transfer
             source.setBalance(source.getBalance().subtract(request.getAmount()));
             destination.setBalance(destination.getBalance().add(request.getAmount()));
 
             accountRepository.save(source);
             accountRepository.save(destination);
 
-            // 5. Mark as Completed
+            // 7. Mark as completed
             transaction.setStatus("COMPLETED");
 
         } catch (Exception e) {
             transaction.setStatus("FAILED");
             transaction.setFailureReason(e.getMessage());
             transactionRepository.save(transaction);
-            throw e; // Ensures the transaction rolls back
+            throw e;
         }
 
         return transactionRepository.save(transaction);
