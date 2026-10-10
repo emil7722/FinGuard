@@ -7,151 +7,282 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen p-6">
-<div class="max-w-4xl mx-auto space-y-8">
+<div class="max-w-6xl mx-auto">
 
     <!-- Header -->
-    <header class="border-b border-gray-800 pb-4 flex justify-between items-center">
+    <header class="border-b border-gray-800 pb-4 flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-3xl font-bold tracking-tight text-emerald-400">FinGuard 🛡️</h1>
-            <p class="text-sm text-gray-400">Core Transaction Processing & Ledger Dashboard</p>
+            <h1 class="text-4xl font-bold tracking-tight text-emerald-400">FinGuard 🛡️</h1>
+            <p class="text-sm text-gray-400">Banking & Ledger Dashboard</p>
         </div>
-        <span class="bg-emerald-900/50 text-emerald-300 text-xs px-3 py-1 rounded-full border border-emerald-700">System Online</span>
+        <div id="userInfo" class="hidden bg-emerald-900/50 text-emerald-300 text-xs px-4 py-2 rounded-lg border border-emerald-700">
+            <span id="currentUser"></span>
+            <button onclick="logout()" class="ml-4 bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-xs">Logout</button>
+        </div>
     </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        <!-- 1. Create User Section -->
+    <!-- Auth Section (Initially Visible) -->
+    <div id="authSection" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Register -->
         <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
-            <h2 class="text-xl font-semibold mb-4 text-indigo-400">1. Register User</h2>
-            <form id="userForm" class="space-y-4">
-                <div>
-                    <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Full Name</label>
-                    <input type="text" id="fullName" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500" placeholder="Alex Developer">
-                </div>
-                <div>
-                    <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Email Address</label>
-                    <input type="email" id="email" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500" placeholder="alex@finguard.com">
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded text-sm transition">Create User</button>
+            <h2 class="text-xl font-semibold mb-4 text-indigo-400">Register</h2>
+            <form id="registerForm" class="space-y-4">
+                <input type="text" id="regUsername" placeholder="Username" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500">
+                <input type="email" id="regEmail" placeholder="Email" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500">
+                <input type="password" id="regPassword" placeholder="Password" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded text-sm transition">Sign Up</button>
+            </form>
+            <div id="registerResult" class="mt-4 text-xs font-mono text-gray-400 bg-gray-900 p-2 rounded hidden"></div>
+        </div>
+
+        <!-- Login -->
+        <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+            <h2 class="text-xl font-semibold mb-4 text-emerald-400">Login</h2>
+            <form id="loginForm" class="space-y-4">
+                <input type="text" id="loginUsername" placeholder="Username" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-emerald-500">
+                <input type="password" id="loginPassword" placeholder="Password" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-emerald-500">
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded text-sm transition">Sign In</button>
+            </form>
+            <div id="loginResult" class="mt-4 text-xs font-mono text-gray-400 bg-gray-900 p-2 rounded hidden"></div>
+        </div>
+    </div>
+
+    <!-- App Section (Hidden until Logged In) -->
+    <div id="appSection" class="hidden space-y-8">
+        <!-- Create User -->
+        <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+            <h2 class="text-xl font-semibold mb-4 text-indigo-400">Create User</h2>
+            <form id="userForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="fullName" placeholder="Full Name" required class="bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500">
+                <input type="email" id="email" placeholder="Email" required class="bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500">
+                <button type="submit" class="md:col-span-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded text-sm transition">Create User</button>
             </form>
             <div id="userResult" class="mt-4 text-xs font-mono text-gray-400 bg-gray-900 p-2 rounded hidden"></div>
         </div>
 
-        <!-- 2. Create Account Section -->
+        <!-- Create Account -->
         <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
-            <h2 class="text-xl font-semibold mb-4 text-indigo-400">2. Create Account</h2>
-            <form id="accountForm" class="space-y-4">
-                <div>
-                    <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">User UUID</label>
-                    <input type="text" id="accUserId" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500" placeholder="Paste User UUID">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Account Number / IBAN</label>
-                        <input type="text" id="accountNumber" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500" placeholder="AZ99FINGUARD...">
-                    </div>
-                    <div>
-                        <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Initial Balance ($)</label>
-                        <input type="number" step="0.01" id="initialBalance" value="500.00" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500">
-                    </div>
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded text-sm transition">Create Account</button>
+            <h2 class="text-xl font-semibold mb-4 text-indigo-400">Create Account</h2>
+            <form id="accountForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="text" id="accUserId" placeholder="User UUID" required class="bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500">
+                <input type="text" id="accountNumber" placeholder="Account Number" required class="bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500">
+                <input type="number" step="0.01" id="initialBalance" placeholder="Balance ($)" value="1000.00" required class="bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-indigo-500">
+                <button type="submit" class="md:col-span-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded text-sm transition">Create Account</button>
             </form>
             <div id="accountResult" class="mt-4 text-xs font-mono text-gray-400 bg-gray-900 p-2 rounded hidden"></div>
         </div>
 
-    </div>
+        <!-- Transfer Funds -->
+        <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+            <h2 class="text-xl font-semibold mb-4 text-emerald-400">Execute Transfer</h2>
+            <form id="transferForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="text" id="sourceAccountId" placeholder="Source Account UUID" required class="bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-emerald-500">
+                <input type="text" id="destinationAccountId" placeholder="Destination Account UUID" required class="bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-emerald-500">
+                <input type="number" step="0.01" id="transferAmount" placeholder="Amount ($)" value="50.00" required class="bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-emerald-500">
+                <input type="text" id="idempotencyKey" placeholder="Idempotency Key (auto)" class="bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-emerald-500">
+                <button type="submit" class="md:col-span-4 bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded text-sm transition">Send Transfer</button>
+            </form>
+            <div id="transferResult" class="mt-4 text-xs font-mono text-gray-400 bg-gray-900 p-2 rounded hidden"></div>
+        </div>
 
-    <!-- 3. Transfer Funds Section -->
-    <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
-        <h2 class="text-xl font-semibold mb-4 text-emerald-400">3. Execute Money Transfer</h2>
-        <form id="transferForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Source Account UUID</label>
-                <input type="text" id="sourceAccountId" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-emerald-500" placeholder="Sender Account ID">
-            </div>
-            <div>
-                <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Destination Account UUID</label>
-                <input type="text" id="destinationAccountId" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-emerald-500" placeholder="Receiver Account ID">
-            </div>
-            <div>
-                <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Amount ($)</label>
-                <input type="number" step="0.01" id="transferAmount" value="50.00" required class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-emerald-500">
-            </div>
-            <div>
-                <label class="block text-xs uppercase tracking-wider text-gray-400 mb-1">Idempotency Key</label>
-                <input type="text" id="idempotencyKey" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-sm focus:outline-none focus:border-emerald-500" placeholder="e.g. transfer-uuid-123">
-            </div>
-            <div class="md:col-span-2">
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded text-sm transition">Send Transfer</button>
-            </div>
-        </form>
-        <div id="transferResult" class="mt-4 text-xs font-mono text-gray-400 bg-gray-900 p-2 rounded hidden"></div>
+        <!-- View Accounts -->
+        <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+            <h2 class="text-xl font-semibold mb-4 text-blue-400">View Accounts</h2>
+            <button onclick="getAllAccounts()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded text-sm transition">Load All Accounts</button>
+            <div id="accountsList" class="mt-4 text-xs font-mono text-gray-400 bg-gray-900 p-2 rounded max-h-64 overflow-auto hidden"></div>
+        </div>
     </div>
 
 </div>
 
-<!-- JavaScript to handle API calls -->
 <script>
-    // Auto-generate idempotency key on load
-    document.getElementById('idempotencyKey').value = 'tx-key-' + Math.random().toString(36).substring(2, 9);
+    const API_BASE = 'http://localhost:8080/api/v1';
+    let token = null;
+    let currentUsername = null;
+
+    // Auto-generate idempotency key
+    document.getElementById('idempotencyKey').value = 'tx-' + Date.now();
+
+    // Register
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch(`${API_BASE}/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('regUsername').value,
+                    email: document.getElementById('regEmail').value,
+                    password: document.getElementById('regPassword').value
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showResult('registerResult', `✅ Registered! User: ${data.username}`);
+                token = data.token;
+                currentUsername = data.username;
+                showAppSection();
+            } else {
+                showResult('registerResult', `❌ ${data.message}`);
+            }
+        } catch (err) {
+            showResult('registerResult', `❌ Error: ${err.message}`);
+        }
+    });
+
+    // Login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch(`${API_BASE}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('loginUsername').value,
+                    password: document.getElementById('loginPassword').value
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showResult('loginResult', `✅ Logged in as ${data.username}`);
+                token = data.token;
+                currentUsername = data.username;
+                showAppSection();
+            } else {
+                showResult('loginResult', `❌ ${data.message}`);
+            }
+        } catch (err) {
+            showResult('loginResult', `❌ Error: ${err.message}`);
+        }
+    });
 
     // Create User
     document.getElementById('userForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const res = await fetch('/api/v1/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                fullName: document.getElementById('fullName').value,
-                email: document.getElementById('email').value
-            })
-        });
-        const data = await res.json();
-        const resultBox = document.getElementById('userResult');
-        resultBox.classList.remove('hidden');
-        resultBox.textContent = `Success! User ID: ${data.id}`;
-        document.getElementById('accUserId').value = data.id; // Auto-fill next form
+        try {
+            const res = await fetch(`${API_BASE}/users`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    fullName: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showResult('userResult', `✅ User Created! ID: ${data.id}`);
+                document.getElementById('accUserId').value = data.id;
+            } else {
+                showResult('userResult', `❌ ${data.message}`);
+            }
+        } catch (err) {
+            showResult('userResult', `❌ Error: ${err.message}`);
+        }
     });
 
     // Create Account
     document.getElementById('accountForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const res = await fetch('/api/v1/accounts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: document.getElementById('accUserId').value,
-                accountNumber: document.getElementById('accountNumber').value,
-                initialBalance: parseFloat(document.getElementById('initialBalance').value),
-                currency: "USD"
-            })
-        });
-        const data = await res.json();
-        const resultBox = document.getElementById('accountResult');
-        resultBox.classList.remove('hidden');
-        resultBox.textContent = `Success! Account ID: ${data.id} (Balance: $${data.balance})`;
+        try {
+            const res = await fetch(`${API_BASE}/accounts`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    userId: document.getElementById('accUserId').value,
+                    accountNumber: document.getElementById('accountNumber').value,
+                    initialBalance: parseFloat(document.getElementById('initialBalance').value),
+                    currency: "USD"
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showResult('accountResult', `✅ Account Created! ID: ${data.id}, Balance: $${data.balance}`);
+            } else {
+                showResult('accountResult', `❌ ${data.message}`);
+            }
+        } catch (err) {
+            showResult('accountResult', `❌ Error: ${err.message}`);
+        }
     });
 
-    // Transfer Funds
+    // Transfer
     document.getElementById('transferForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const res = await fetch('/api/v1/transactions/transfer', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                sourceAccountId: document.getElementById('sourceAccountId').value,
-                destinationAccountId: document.getElementById('destinationAccountId').value,
-                amount: parseFloat(document.getElementById('transferAmount').value),
-                currency: "USD",
-                idempotencyKey: document.getElementById('idempotencyKey').value
-            })
-        });
-        const data = await res.json();
-        const resultBox = document.getElementById('transferResult');
-        resultBox.classList.remove('hidden');
-        resultBox.textContent = `Status: ${data.status} | Source Balance left: $${data.sourceAccount?.balance} | Dest Balance: $${data.destinationAccount?.balance}`;
+        try {
+            const res = await fetch(`${API_BASE}/transactions/transfer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    sourceAccountId: document.getElementById('sourceAccountId').value,
+                    destinationAccountId: document.getElementById('destinationAccountId').value,
+                    amount: parseFloat(document.getElementById('transferAmount').value),
+                    currency: "USD",
+                    idempotencyKey: document.getElementById('idempotencyKey').value
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showResult('transferResult', `✅ Transfer ${data.status}! Source: $${data.sourceAccount?.balance}, Dest: $${data.destinationAccount?.balance}`);
+            } else {
+                showResult('transferResult', `❌ ${data.message}`);
+            }
+        } catch (err) {
+            showResult('transferResult', `❌ Error: ${err.message}`);
+        }
     });
+
+    // View All Accounts
+    async function getAllAccounts() {
+        try {
+            const res = await fetch(`${API_BASE}/accounts`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                const list = document.getElementById('accountsList');
+                list.classList.remove('hidden');
+                list.textContent = JSON.stringify(data, null, 2);
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    }
+
+    // Helpers
+    function showResult(elementId, message) {
+        const el = document.getElementById(elementId);
+        el.textContent = message;
+        el.classList.remove('hidden');
+    }
+
+    function showAppSection() {
+        document.getElementById('authSection').classList.add('hidden');
+        document.getElementById('appSection').classList.remove('hidden');
+        document.getElementById('userInfo').classList.remove('hidden');
+        document.getElementById('currentUser').textContent = `Logged in as: ${currentUsername}`;
+    }
+
+    function logout() {
+        token = null;
+        currentUsername = null;
+        document.getElementById('authSection').classList.remove('hidden');
+        document.getElementById('appSection').classList.add('hidden');
+        document.getElementById('userInfo').classList.add('hidden');
+        document.getElementById('registerForm').reset();
+        document.getElementById('loginForm').reset();
+    }
 </script>
 </body>
 </html>

@@ -23,6 +23,11 @@ spring:
 
 server:
   port: 8080
+  error:
+    include-message: always
+    include-stacktrace: always
+    include-exception: true
+    include-binding-errors: always
 
 management:
   endpoints:
@@ -32,3 +37,17 @@ management:
   endpoint:
     health:
       show-details: always
+
+jwt:
+  secret: MyVerySecureSecretKeyThatIsAtLeast512BitsLongForJWTTokenGenerationWithHS512AlgorithmEncryptionStandard
+  expiration: 86400000
+
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    com.example.Finguard: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%-5level] %logger{36} - %msg%n"
