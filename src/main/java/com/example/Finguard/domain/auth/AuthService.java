@@ -1,6 +1,8 @@
 package com.example.Finguard.domain.auth;
 
 import com.example.Finguard.common.exception.ValidationException;
+import com.example.Finguard.domain.user.User;
+import com.example.Finguard.domain.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,11 +15,13 @@ public class AuthService {
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     private final AuthUserRepository authUserRepository;
+    private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthService(AuthUserRepository authUserRepository, JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder) {
+    public AuthService(AuthUserRepository authUserRepository, UserRepository userRepository, JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder) {
         this.authUserRepository = authUserRepository;
+        this.userRepository = userRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
     }
@@ -51,15 +55,25 @@ public class AuthService {
             authUser.setEnabled(true);
 
             logger.info("Saving AuthUser to database");
-            AuthUser savedUser = authUserRepository.save(authUser);
-            logger.info("AuthUser saved with ID: {}", savedUser.getId());
+            AuthUser savedAuthUser = authUserRepository.save(authUser);
+            logger.info("AuthUser saved with ID: {}", savedAuthUser.getId());
+
+            // Create corresponding User record
+            logger.info("Creating corresponding User record");
+            User user = new User();
+            user.setId(savedAuthUser.getId());
+            user.setEmail(savedAuthUser.getEmail());
+            user.setFullName(request.getUsername());
+            user.setStatus("ACTIVE");
+            userRepository.save(user);
+            logger.info("User record created with ID: {}", user.getId());
 
             // Generate token
-            logger.info("Generating JWT token for user: {}", savedUser.getUsername());
-            String token = jwtTokenProvider.generateToken(savedUser.getId(), savedUser.getUsername(), savedUser.getRole());
+            logger.info("Generating JWT token for user: {}", savedAuthUser.getUsername());
+            String token = jwtTokenProvider.generateToken(savedAuthUser.getId(), savedAuthUser.getUsername(), savedAuthUser.getRole());
             logger.info("Token generated successfully");
 
-            AuthTokenResponse response = new AuthTokenResponse(token, savedUser.getId(), savedUser.getUsername(), savedUser.getRole());
+            AuthTokenResponse response = new AuthTokenResponse(token, savedAuthUser.getId(), savedAuthUser.getUsername(), savedAuthUser.getRole());
             logger.info("=== REGISTER SUCCESS ===");
             return response;
         } catch (Exception e) {
